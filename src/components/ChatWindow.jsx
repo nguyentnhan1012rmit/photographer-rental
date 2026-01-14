@@ -2,12 +2,14 @@ import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../contexts/AuthContext'
 import { Send } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
 export default function ChatWindow({ recipientId, recipientName, recipientAvatar }) {
     const { user } = useAuth()
     const [messages, setMessages] = useState([])
     const [newMessage, setNewMessage] = useState('')
+    const [contextMenu, setContextMenu] = useState(null) // { x, y, messageId }
     const messagesEndRef = useRef(null)
 
     useEffect(() => {
@@ -108,6 +110,39 @@ export default function ChatWindow({ recipientId, recipientName, recipientAvatar
         }
     }
 
+    const handleDeleteMessage = async () => {
+        if (!contextMenu) return
+        const messageId = contextMenu.messageId
+        setContextMenu(null)
+
+        const { error } = await supabase
+            .from('messages')
+            .delete()
+            .eq('id', messageId)
+
+        if (error) {
+            toast.error("Failed to delete message")
+        } else {
+            toast.success("Message deleted")
+            setMessages(prev => prev.filter(m => m.id !== messageId))
+        }
+    }
+
+    const handleContextMenu = (e, messageId) => {
+        e.preventDefault()
+        setContextMenu({
+            x: e.pageX,
+            y: e.pageY,
+            messageId
+        })
+    }
+
+    useEffect(() => {
+        const handleClick = () => setContextMenu(null)
+        document.addEventListener('click', handleClick)
+        return () => document.removeEventListener('click', handleClick)
+    }, [])
+
     return (
         <div className="flex flex-col h-[600px] border border-base-200 rounded-xl bg-base-100 shadow-xl overflow-hidden">
             {/* Header */}
@@ -133,7 +168,10 @@ export default function ChatWindow({ recipientId, recipientName, recipientAvatar
                     const isMe = msg.sender_id === user.id
                     return (
                         <div key={msg.id} className={`chat ${isMe ? 'chat-end' : 'chat-start'}`}>
-                            <div className={`chat-bubble ${isMe ? 'chat-bubble-primary' : 'chat-bubble-secondary'}`}>
+                            <div
+                                onContextMenu={(e) => handleContextMenu(e, msg.id)}
+                                className={`chat-bubble cursor-pointer ${isMe ? 'chat-bubble-primary' : 'chat-bubble-secondary'}`}
+                            >
                                 {msg.content}
                             </div>
                             <div className="chat-footer opacity-50 text-xs mt-1">
@@ -144,6 +182,21 @@ export default function ChatWindow({ recipientId, recipientName, recipientAvatar
                 })}
                 <div ref={messagesEndRef} />
             </div>
+
+            {/* Context Menu */}
+            {contextMenu && (
+                <div
+                    className="fixed z-50 bg-base-100 border border-base-200 shadow-xl rounded-lg py-1 w-40"
+                    style={{ top: contextMenu.y, left: contextMenu.x }}
+                >
+                    <button
+                        onClick={handleDeleteMessage}
+                        className="w-full text-left px-4 py-2 hover:bg-error/10 text-error flex items-center gap-2 text-sm"
+                    >
+                        <Trash2 size={16} /> Delete
+                    </button>
+                </div>
+            )}
 
             {/* Input */}
             <form onSubmit={handleSendMessage} className="p-4 bg-base-200 border-t border-base-300 flex gap-2">

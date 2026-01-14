@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../contexts/AuthContext'
 import ChatWindow from '../components/ChatWindow'
-import { MessageSquare } from 'lucide-react'
+import NewChatModal from '../components/NewChatModal'
+import { MessageSquare, Plus, Trash2 } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
+import { toast } from 'react-hot-toast'
 
 export default function Inbox() {
     const { user } = useAuth()
@@ -11,6 +13,8 @@ export default function Inbox() {
     const [conversations, setConversations] = useState([])
     const [selectedUser, setSelectedUser] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [isNewChatOpen, setIsNewChatOpen] = useState(false)
+    const [contextMenu, setContextMenu] = useState(null) // { x, y, conversationId }
 
     useEffect(() => {
         if (user) {
@@ -156,15 +160,59 @@ export default function Inbox() {
             }
         }).sort((a, b) => new Date(b.lastMessageDate) - new Date(a.lastMessageDate))
 
-        setConversations(conversationList || [])
-        setLoading(false)
-        return conversationList || []
     }
+
+    const handleDeleteConversation = async () => {
+        if (!contextMenu) return
+        if (!window.confirm("Are you sure you want to delete this conversation? This will delete all messages for both sides.")) {
+            setContextMenu(null)
+            return
+        }
+
+        const partnerId = contextMenu.conversationId
+        setContextMenu(null)
+
+        // Delete messages where I am sender OR receiver involved with this partner
+        const { error } = await supabase
+            .from('messages')
+            .delete()
+            .or(`and(sender_id.eq.${user.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${user.id})`)
+
+        if (error) {
+            toast.error("Failed to delete conversation")
+            console.error(error)
+        } else {
+            toast.success("Conversation deleted")
+            setConversations(prev => prev.filter(c => c.id !== partnerId))
+            if (selectedUser?.id === partnerId) setSelectedUser(null)
+        }
+    }
+
+    const handleContextMenu = (e, conversationId) => {
+        e.preventDefault()
+        setContextMenu({
+            x: e.pageX,
+            y: e.pageY,
+            conversationId
+        })
+    }
+
+    // Close context menu on click elsewhere
+    useEffect(() => {
+        const handleClick = () => setContextMenu(null)
+        document.addEventListener('click', handleClick)
+        return () => document.removeEventListener('click', handleClick)
+    }, [])
 
     return (
         <div className="container mx-auto p-4 py-8 min-h-[80vh]">
-            <h1 className="text-3xl font-bold mb-8 flex items-center gap-2">
-                <MessageSquare className="text-primary" /> Inbox
+            <h1 className="text-3xl font-bold mb-8 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <MessageSquare className="text-primary" /> Inbox
+                </div>
+                <button onClick={() => setIsNewChatOpen(true)} className="btn btn-primary btn-sm gap-2">
+                    <Plus size={16} /> New Chat
+                </button>
             </h1>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[600px]">
@@ -176,8 +224,11 @@ export default function Inbox() {
                         ) : (
                             <ul className="menu w-full p-2">
                                 {conversations.map(conv => (
-                                    <li key={conv.id} onClick={() => setSelectedUser(conv)}>
-                                        <div className={`flex gap-3 items-center p-3 rounded-lg ${selectedUser?.id === conv.id ? 'active' : ''}`}>
+                                    <li key={conv.id} onContextMenu={(e) => handleContextMenu(e, conv.id)}>
+                                        <div
+                                            onClick={() => setSelectedUser(conv)}
+                                            className={`flex gap-3 items-center p-3 rounded-lg cursor-pointer ${selectedUser?.id === conv.id ? 'active bg-primary/10' : 'hover:bg-base-200'}`}
+                                        >
                                             <div className="avatar">
                                                 <div className="w-10 rounded-full">
                                                     <img
@@ -220,6 +271,46 @@ export default function Inbox() {
                     )}
                 </div>
             </div>
-        </div>
+
+            {/* Context Menu */}
+            {
+                contextMenu && (
+                    <div
+                        className="fixed z-50 bg-base-100 border border-base-200 shadow-xl rounded-lg py-1 w-48"
+                        style={{ top: contextMenu.y, left: contextMenu.x }}
+                    >
+                        <button
+                            onClick={handleDeleteConversation}
+                            className="w-full text-left px-4 py-2 hover:bg-error/10 text-error flex items-center gap-2 text-sm"
+                        >
+                            <Trash2 size={16} /> Delete Conversation
+                        </button>
+                    </div>
+                )
+            }
+
+            <NewChatModal
+                isOpen={isNewChatOpen}
+                onClose={() => setIsNewChatOpen(false)}
+                onSelectUser={(user) => {
+                    // Check if already exists
+                    const existing = conversations.find(c => c.id === user.id)
+                    if (existing) {
+                        setSelectedUser(existing)
+                    } else {
+                        // Add temp
+                        const newConvo = {
+                            id: user.id,
+                            full_name: user.full_name,
+                            avatar_url: user.avatar_url,
+                            lastMessage: 'New conversation',
+                            lastMessageDate: new Date().toISOString()
+                        }
+                        setConversations(prev => [newConvo, ...prev])
+                        setSelectedUser(newConvo)
+                    }
+                }}
+            />
+        </div >
     )
 }

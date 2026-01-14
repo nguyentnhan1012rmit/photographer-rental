@@ -121,13 +121,13 @@ export default function Navbar() {
                                                     <Moon size={20} />
                                                 </div>
                                                 <span className="font-medium text-base">
-                                                    {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                                                    Dark Mode
                                                 </span>
                                             </div>
                                             {theme === 'dark' ? (
-                                                <div className="badge badge-sm badge-ghost">Off</div>
-                                            ) : (
                                                 <div className="badge badge-sm badge-primary">On</div>
+                                            ) : (
+                                                <div className="badge badge-sm badge-ghost">Off</div>
                                             )}
                                         </button>
                                     </li>
