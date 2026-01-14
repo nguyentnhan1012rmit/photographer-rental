@@ -37,8 +37,74 @@ export default function Inbox() {
                     }
                 }
             })
+
+            const subscription = subscribeToNewMessages()
+            return () => {
+                subscription.unsubscribe()
+            }
         }
     }, [user, location.state])
+
+    const subscribeToNewMessages = () => {
+        return supabase
+            .channel('public:inbox')
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'messages',
+                filter: `receiver_id=eq.${user.id}`
+            }, async (payload) => {
+                handleNewMessage(payload.new, payload.new.sender_id)
+            })
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'messages',
+                filter: `sender_id=eq.${user.id}`
+            }, async (payload) => {
+                // Update inbox when I send a message too
+                handleNewMessage(payload.new, payload.new.receiver_id)
+            })
+            .subscribe()
+    }
+
+    const handleNewMessage = async (newMessage, partnerId) => {
+        setConversations(prev => {
+            const existingIndex = prev.findIndex(c => c.id === partnerId)
+            if (existingIndex >= 0) {
+                const updated = { ...prev[existingIndex], lastMessage: newMessage.content, lastMessageDate: newMessage.created_at }
+                const newList = [...prev]
+                newList.splice(existingIndex, 1)
+                return [updated, ...newList]
+            } else {
+                return prev // Wait for fetch
+            }
+        })
+
+        // Check if we need to fetch profile (only if not found above)
+        // We can't robustly check "if not found" inside the async callback easily without race conditions on 'prev', 
+        // effectively we just fetch if we suspect it might be new, or we can just rely on the fact that if we sent it, we probably know them.
+        // For incoming:
+        if (newMessage.sender_id === partnerId) {
+            const { data: senderProfile } = await supabase
+                .from('profiles')
+                .select('id, full_name, avatar_url')
+                .eq('id', partnerId)
+                .single()
+
+            if (senderProfile) {
+                setConversations(prev => {
+                    if (prev.find(c => c.id === partnerId)) return prev
+                    const newConvo = {
+                        ...senderProfile,
+                        lastMessage: newMessage.content,
+                        lastMessageDate: newMessage.created_at
+                    }
+                    return [newConvo, ...prev]
+                })
+            }
+        }
+    }
 
     const fetchConversations = async () => {
         // This is a bit complex in SQL. We need to find unique users we've chatted with.
@@ -114,7 +180,11 @@ export default function Inbox() {
                                         <div className={`flex gap-3 items-center p-3 rounded-lg ${selectedUser?.id === conv.id ? 'active' : ''}`}>
                                             <div className="avatar">
                                                 <div className="w-10 rounded-full">
-                                                    {conv.avatar_url ? <img src={conv.avatar_url} /> : <div className="bg-neutral text-neutral-content w-full h-full flex items-center justify-center font-bold">{conv.full_name?.[0]}</div>}
+                                                    <img
+                                                        src={conv.avatar_url || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"}
+                                                        alt={conv.full_name}
+                                                        className="w-full h-full object-cover"
+                                                    />
                                                 </div>
                                             </div>
                                             <div className="flex-1 overflow-hidden">

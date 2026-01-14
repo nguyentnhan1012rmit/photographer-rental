@@ -34,6 +34,9 @@ export default function PhotographerProfile() {
     const [newPortfolioCaption, setNewPortfolioCaption] = useState('')
     const [portfolioPreview, setPortfolioPreview] = useState(null)
 
+    const [isFollowing, setIsFollowing] = useState(false)
+    const [followLoading, setFollowLoading] = useState(false)
+
     useEffect(() => {
         async function fetchData() {
             setLoading(true)
@@ -48,6 +51,17 @@ export default function PhotographerProfile() {
             setProfile(profileData)
 
             if (profileData) {
+                // Check Follow Status
+                if (user && user.id !== id) {
+                    const { data: followData } = await supabase
+                        .from('follows')
+                        .select('*')
+                        .eq('follower_id', user.id)
+                        .eq('following_id', id)
+                        .maybeSingle()
+                    setIsFollowing(!!followData)
+                }
+
                 // Fetch Services
                 const { data: servicesData } = await supabase
                     .from('services')
@@ -79,7 +93,44 @@ export default function PhotographerProfile() {
             setLoading(false)
         }
         fetchData()
-    }, [id])
+    }, [id, user])
+
+    const handleFollowToggle = async () => {
+        if (!user) {
+            navigate('/login')
+            return
+        }
+        setFollowLoading(true)
+        if (isFollowing) {
+            // Unfollow
+            const { error } = await supabase
+                .from('follows')
+                .delete()
+                .eq('follower_id', user.id)
+                .eq('following_id', id)
+
+            if (!error) {
+                setIsFollowing(false)
+                setProfile(prev => ({ ...prev, followers_count: (prev.followers_count || 0) - 1 }))
+                toast.success("Unfollowed")
+            }
+        } else {
+            // Follow
+            const { error } = await supabase
+                .from('follows')
+                .insert({
+                    follower_id: user.id,
+                    following_id: id
+                })
+
+            if (!error) {
+                setIsFollowing(true)
+                setProfile(prev => ({ ...prev, followers_count: (prev.followers_count || 0) + 1 }))
+                toast.success("Following!")
+            }
+        }
+        setFollowLoading(false)
+    }
 
     const handleBookClick = (service) => {
         if (!user) {
@@ -97,7 +148,7 @@ export default function PhotographerProfile() {
         }
     }
 
-    // Owner Handlers
+    // Owner Handlers (Logic remains same, hiding for brevity in replacement if possible, but tool requires contiguous... I'll include it)
     const handleAddService = async (e) => {
         e.preventDefault()
         const { error } = await supabase.from('services').insert({
@@ -178,6 +229,36 @@ export default function PhotographerProfile() {
     }
 
 
+    const handleDeleteService = async (serviceId) => {
+        if (!window.confirm("Delete this service?")) return
+        const { error } = await supabase.from('services').delete().eq('id', serviceId)
+        if (!error) {
+            toast.success("Service deleted")
+            setServices(prev => prev.filter(s => s.id !== serviceId))
+        } else {
+            toast.error("Failed to delete service")
+        }
+    }
+
+    const handleDeletePortfolio = async (itemId, imageUrl) => {
+        if (!window.confirm("Delete this photo?")) return
+
+        // Delete from storage (optional but good practice)
+        if (imageUrl) {
+            const path = imageUrl.split('portfolio/').pop()
+            if (path) await supabase.storage.from('portfolio').remove([path])
+        }
+
+        const { error } = await supabase.from('portfolio_items').delete().eq('id', itemId)
+        if (!error) {
+            toast.success("Photo deleted")
+            setPortfolio(prev => prev.filter(i => i.id !== itemId))
+        } else {
+            toast.error("Failed to delete photo")
+        }
+    }
+
+
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center">
             <span className="loading loading-spinner loading-lg text-primary"></span>
@@ -194,82 +275,106 @@ export default function PhotographerProfile() {
     )
 
     return (
-        <div className="min-h-screen bg-base-100 pb-20">
-            {/* Navigation Back Button */}
-            <div className="p-4">
-                <button
-                    onClick={() => navigate('/photographers')}
-                    className="btn btn-ghost btn-circle"
-                >
-                    <ArrowLeft size={24} />
-                </button>
+        <div className="min-h-screen bg-base-100 pb-20 relative">
+
+            {/* Cover Photo */}
+            <div className={`w-full h-80 bg-base-300 relative ${!profile.cover_photo_url ? 'bg-gradient-to-r from-primary/10 to-secondary/10' : ''}`}>
+                {profile.cover_photo_url && (
+                    <img src={profile.cover_photo_url} alt="Cover" className="w-full h-full object-cover" />
+                )}
+                {/* Navigation Back Button - Absolute on top of cover */}
+                <div className="absolute top-4 left-4 z-10">
+                    <button
+                        onClick={() => navigate('/photographers')}
+                        className="btn btn-circle bg-base-100/50 backdrop-blur border-none hover:bg-base-100/80"
+                    >
+                        <ArrowLeft size={24} />
+                    </button>
+                </div>
             </div>
 
-            <div className="container mx-auto px-4 max-w-4xl">
-                {/* New Profile Header Layout */}
-                <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-12 mb-12">
+            <div className="container mx-auto px-4 max-w-5xl -mt-20 relative z-10">
+                {/* Profile Card */}
+                <div className="card bg-base-100 shadow-xl border border-base-200">
+                    <div className="card-body pt-0 md:flex-row gap-6">
 
-                    {/* Avatar */}
-                    <div className="avatar">
-                        <div className="w-24 md:w-32 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                            {profile.avatar_url ? (
-                                <img src={profile.avatar_url} alt={profile.full_name} />
-                            ) : (
-                                <div className="bg-neutral text-neutral-content w-full h-full flex items-center justify-center text-4xl font-bold">
-                                    {profile.full_name?.[0]}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Info Section */}
-                    <div className="flex-1 flex flex-col items-center md:items-start gap-4">
-                        <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 w-full">
-                            <h1 className="text-3xl font-bold">{profile.full_name}</h1>
-
-                            {/* Actions */}
-                            <div className="flex items-center gap-2">
-                                <button className="btn btn-primary btn-sm rounded-full px-6" onClick={scrollToServices}>
-                                    Booking
-                                </button>
-                                <button
-                                    className="btn btn-outline btn-circle btn-sm"
-                                    onClick={() => navigate('/inbox', { state: { startChatWith: profile } })}
-                                >
-                                    <Mail size={16} />
-                                </button>
+                        {/* Avatar */}
+                        {/* Avatar */}
+                        <div className="avatar -mt-16 mx-auto md:mx-0">
+                            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 bg-base-100 overflow-hidden relative">
+                                <img
+                                    src={profile.avatar_url || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"}
+                                    alt={profile.full_name}
+                                    className="w-full h-full object-cover"
+                                />
                             </div>
                         </div>
 
-                        {/* Stats Row */}
-                        <div className="flex items-center gap-8 text-sm md:text-base">
-                            <div className="text-center md:text-left">
-                                <span className="font-bold block text-lg">{portfolio.length}</span>
-                                <span className="opacity-70">posts</span>
-                            </div>
-                            <div className="text-center md:text-left">
-                                <span className="font-bold block text-lg">1.2k</span>
-                                <span className="opacity-70">followers</span>
-                            </div>
-                            <div className="text-center md:text-left">
-                                <div className="flex items-center gap-1 justify-center md:justify-start">
-                                    <span className="font-bold text-lg">{averageRating}</span>
-                                    <Star size={16} className="fill-warning text-warning" />
+                        {/* Info Section */}
+                        <div className="flex-1 flex flex-col items-center md:items-start gap-4 mt-4">
+                            <div className="flex flex-col md:flex-row items-center justify-between w-full gap-4">
+                                <div>
+                                    <h1 className="text-3xl font-bold text-center md:text-left">{profile.full_name}</h1>
+                                    <p className="opacity-60 text-center md:text-left text-primary font-medium">@{profile.username || 'user'}</p>
                                 </div>
-                                <span className="opacity-70">rating</span>
-                            </div>
-                        </div>
 
-                        {/* Bio & Location */}
-                        <div className="text-center md:text-left space-y-1 max-w-md">
-                            {profile.location && (
-                                <div className="flex items-center justify-center md:justify-start gap-1 text-sm opacity-70">
-                                    <MapPin size={14} /> {profile.location}
+                                {/* Actions */}
+                                <div className="flex items-center gap-2">
+                                    {!isOwner && (
+                                        <button
+                                            className={`btn ${isFollowing ? 'btn-outline' : 'btn-primary'} btn-sm rounded-full px-6`}
+                                            onClick={handleFollowToggle}
+                                            disabled={followLoading}
+                                        >
+                                            {isFollowing ? 'Following' : 'Follow'}
+                                        </button>
+                                    )}
+                                    <button className="btn btn-secondary btn-sm rounded-full px-6" onClick={scrollToServices}>
+                                        Booking
+                                    </button>
+                                    <button
+                                        className="btn btn-outline btn-circle btn-sm"
+                                        onClick={() => navigate('/inbox', { state: { startChatWith: profile } })}
+                                    >
+                                        <Mail size={16} />
+                                    </button>
                                 </div>
-                            )}
-                            <p className="text-sm opacity-90 leading-relaxed">
-                                {profile.bio || "Capturing moments, creating memories. Professional photographer available for bookings."}
-                            </p>
+                            </div>
+
+                            {/* Stats Row */}
+                            <div className="flex items-center gap-8 text-sm md:text-base border-y border-base-200 py-4 w-full justify-center md:justify-start">
+                                <div className="text-center md:text-left">
+                                    <span className="font-bold block text-lg">{portfolio.length}</span>
+                                    <span className="opacity-70">posts</span>
+                                </div>
+                                <div className="text-center md:text-left">
+                                    <span className="font-bold block text-lg">{profile.followers_count || 0}</span>
+                                    <span className="opacity-70">followers</span>
+                                </div>
+                                <div className="text-center md:text-left">
+                                    <span className="font-bold block text-lg">{profile.following_count || 0}</span>
+                                    <span className="opacity-70">following</span>
+                                </div>
+                                <div className="text-center md:text-left border-l pl-8 border-base-200">
+                                    <div className="flex items-center gap-1 justify-center md:justify-start">
+                                        <span className="font-bold text-lg">{averageRating}</span>
+                                        <Star size={16} className="fill-warning text-warning" />
+                                    </div>
+                                    <span className="opacity-70">rating</span>
+                                </div>
+                            </div>
+
+                            {/* Bio & Location */}
+                            <div className="text-center md:text-left space-y-2 max-w-2xl">
+                                {profile.location && (
+                                    <div className="flex items-center justify-center md:justify-start gap-1 text-sm opacity-70">
+                                        <MapPin size={14} /> {profile.location}
+                                    </div>
+                                )}
+                                <p className="opacity-90 leading-relaxed">
+                                    {profile.bio || "Capturing moments, creating memories. Professional photographer available for bookings."}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -302,15 +407,23 @@ export default function PhotographerProfile() {
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                     />
                                     {/* Hover Overlay */}
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 text-white">
-                                        <div className="flex items-center gap-1">
-                                            <Heart size={20} className="fill-white" />
-                                            <span className="font-bold">24</span>
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            <MessageCircle size={20} className="fill-white" />
-                                            <span className="font-bold">4</span>
-                                        </div>
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4 text-white">
+                                        {isOwner ? (
+                                            <button onClick={(e) => { e.stopPropagation(); handleDeletePortfolio(item.id, item.image_url); }} className="btn btn-error btn-sm btn-circle text-white">
+                                                <X size={16} />
+                                            </button>
+                                        ) : (
+                                            <>
+                                                <div className="flex items-center gap-1">
+                                                    <Heart size={20} className="fill-white" />
+                                                    <span className="font-bold">24</span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <MessageCircle size={20} className="fill-white" />
+                                                    <span className="font-bold">4</span>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             ))}
@@ -346,13 +459,16 @@ export default function PhotographerProfile() {
                                             {service.description}
                                         </p>
                                         <div className="card-actions justify-end mt-2">
-                                            <button
-                                                onClick={() => handleBookClick(service)}
-                                                className="btn btn-primary btn-sm w-full"
-                                                disabled={isOwner}
-                                            >
-                                                Book Now
-                                            </button>
+                                            {isOwner ? (
+                                                <button onClick={() => handleDeleteService(service.id)} className="btn btn-error btn-outline btn-sm">Delete</button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleBookClick(service)}
+                                                    className="btn btn-primary btn-sm w-full"
+                                                >
+                                                    Book Now
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

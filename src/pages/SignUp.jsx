@@ -7,7 +7,7 @@ export default function SignUp() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [fullName, setFullName] = useState('')
-    // Default to 'customer'. If they want to be pro, they can upgrade later or we add a toggle in profile settings.
+    const [username, setUsername] = useState('')
     const [role, setRole] = useState('customer')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
@@ -24,6 +24,7 @@ export default function SignUp() {
             options: {
                 data: {
                     full_name: fullName,
+                    username: username,
                     role: role,
                 }
             }
@@ -52,6 +53,23 @@ export default function SignUp() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {error && <div className="alert alert-error rounded-lg">{error}</div>}
 
+                    {/* Role Selection */}
+                    {/* Role Selection */}
+                    <div className="form-control bg-base-200 p-4 rounded-xl mb-6">
+                        <label className="label cursor-pointer justify-start gap-4">
+                            <span className="label-text font-bold text-lg">I am a Creator</span>
+                            <input
+                                type="checkbox"
+                                className="toggle toggle-primary toggle-lg"
+                                checked={role === 'photographer'}
+                                onChange={(e) => setRole(e.target.checked ? 'photographer' : 'customer')}
+                            />
+                        </label>
+                        <p className="text-sm opacity-70 mt-1 ml-1">
+                            Switch this on if you want to offer your services as a photographer.
+                        </p>
+                    </div>
+
                     <div className="form-control">
                         <label className="label pl-0">
                             <span className="label-text font-medium text-lg">Full Name</span>
@@ -63,6 +81,22 @@ export default function SignUp() {
                             value={fullName}
                             onChange={(e) => setFullName(e.target.value)}
                             required
+                        />
+                    </div>
+
+                    <div className="form-control">
+                        <label className="label pl-0">
+                            <span className="label-text font-medium text-lg">Username</span>
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="e.g. janedoe"
+                            className="input input-lg input-bordered bg-base-100/50 backdrop-blur-sm w-full focus:outline-none focus:border-primary transition-all"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ''))} // Auto-format username
+                            required
+                            pattern="^[a-z0-9_]+$"
+                            title="Username can only contain lowercase letters, numbers, and underscores."
                         />
                     </div>
 
@@ -94,15 +128,13 @@ export default function SignUp() {
                         />
                     </div>
 
-                    {/* Role section removed as requested. Defaults to user. */}
-
                     <button
                         type="submit"
                         className="btn btn-primary btn-lg w-full mt-8 shadow-lg shadow-primary/30 hover:scale-[1.02] transition-transform"
                         disabled={loading}
                     >
                         {loading ? <span className="loading loading-spinner"></span> : (
-                            <span className="flex items-center gap-2">Sign Up <ArrowRight size={20} /></span>
+                            <span className="flex items-center gap-2">Create Account <ArrowRight size={20} /></span>
                         )}
                     </button>
                 </form>

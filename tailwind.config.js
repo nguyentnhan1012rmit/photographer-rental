@@ -34,6 +34,31 @@ export default {
     daisyui: {
         themes: [
             {
+                light: {
+                    ...require("daisyui/src/theming/themes")["light"],
+                    "primary": "#4f46e5", // Indigo 600
+                    "primary-content": "#ffffff",
+                    "secondary": "#7c3aed", // Violet 600
+                    "secondary-content": "#ffffff",
+                    "accent": "#06b6d4",
+                    "accent-content": "#ffffff",
+                    "neutral": "#f1f5f9", // Slate 100
+                    "neutral-content": "#1e293b", // Slate 800
+                    "base-100": "#ffffff",
+                    "base-200": "#f8fafc", // Slate 50
+                    "base-300": "#e2e8f0", // Slate 200
+                    "base-content": "#0f172a", // Slate 900
+
+                    "--rounded-box": "1rem",
+                    "--rounded-btn": "0.5rem",
+                    "--rounded-badge": "1.9rem",
+                    "--animation-btn": "0.25s",
+                    "--animation-input": "0.2s",
+                    "--btn-focus-scale": "0.95",
+                    "--border-btn": "1px",
+                    "--tab-border": "1px",
+                    "--tab-radius": "0.5rem",
+                },
                 dark: {
                     ...require("daisyui/src/theming/themes")["dark"],
                     "primary": "#4f46e5", // Indigo 600 - slightly deeper/richer

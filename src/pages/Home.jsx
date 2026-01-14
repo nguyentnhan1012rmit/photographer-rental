@@ -27,7 +27,7 @@ export default function Home() {
                                 Find a Photographer
                             </Link>
                             <Link to="/signup" className="btn btn-ghost btn-xl rounded-full px-8 text-lg hover:bg-white/5">
-                                Join as a Pro →
+                                Join Us →
                             </Link>
                         </div>
 

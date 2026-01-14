@@ -49,7 +49,10 @@ export default function ChatWindow({ recipientId, recipientName, recipientAvatar
                 filter: `receiver_id=eq.${user.id}`
             }, (payload) => {
                 if (payload.new.sender_id === recipientId) {
-                    setMessages(prev => [...prev, payload.new])
+                    setMessages(prev => {
+                        if (prev.find(m => m.id === payload.new.id)) return prev
+                        return [...prev, payload.new]
+                    })
                 }
             })
             .on('postgres_changes', {
@@ -59,7 +62,11 @@ export default function ChatWindow({ recipientId, recipientName, recipientAvatar
                 filter: `sender_id=eq.${user.id}`
             }, (payload) => {
                 if (payload.new.receiver_id === recipientId) {
-                    setMessages(prev => [...prev, payload.new])
+                    setMessages(prev => {
+                        // Check if we have this message (either by real ID or by optimistic match if we could, but unique ID is safest)
+                        if (prev.find(m => m.id === payload.new.id)) return prev
+                        return [...prev, payload.new]
+                    })
                 }
             })
             .subscribe()
@@ -69,16 +76,35 @@ export default function ChatWindow({ recipientId, recipientName, recipientAvatar
         e.preventDefault()
         if (!newMessage.trim()) return
 
-        const { error } = await supabase.from('messages').insert({
+        const messageContent = newMessage
+        setNewMessage('') // Clear input immediately
+
+        // Optimistic Update
+        const optimisticMsg = {
+            id: 'temp-' + Date.now(),
             sender_id: user.id,
             receiver_id: recipientId,
-            content: newMessage
-        })
+            content: messageContent,
+            created_at: new Date().toISOString(),
+            is_read: false
+        }
+        setMessages(prev => [...prev, optimisticMsg])
+
+        const { data, error } = await supabase.from('messages').insert({
+            sender_id: user.id,
+            receiver_id: recipientId,
+            content: messageContent
+        }).select()
 
         if (error) {
             toast.error("Failed to send message")
+            setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id)) // Rollback
+            setNewMessage(messageContent) // Restore text
         } else {
-            setNewMessage('')
+            // Replace temp message with real one to get real ID
+            if (data && data[0]) {
+                setMessages(prev => prev.map(m => m.id === optimisticMsg.id ? data[0] : m))
+            }
         }
     }
 
@@ -88,7 +114,11 @@ export default function ChatWindow({ recipientId, recipientName, recipientAvatar
             <div className="bg-base-200 p-4 border-b border-base-300 flex items-center gap-3">
                 <div className="avatar">
                     <div className="w-10 rounded-full">
-                        {recipientAvatar ? <img src={recipientAvatar} /> : <div className="bg-primary text-primary-content w-full h-full flex items-center justify-center font-bold">{recipientName?.[0]}</div>}
+                        <img
+                            src={recipientAvatar || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"}
+                            alt={recipientName}
+                            className="w-full h-full object-cover"
+                        />
                     </div>
                 </div>
                 <h3 className="font-bold">{recipientName}</h3>

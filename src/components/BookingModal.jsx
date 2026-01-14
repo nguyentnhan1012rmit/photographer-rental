@@ -89,7 +89,7 @@ export default function BookingModal({ service, photographer, isOpen, onClose, o
                                 <span className="label-text">Select Date</span>
                             </label>
                             <label className="input input-bordered flex items-center gap-2">
-                                <Calendar size={18} className="opacity-60" />
+                                <CalendarIcon size={18} className="opacity-60" />
                                 <input
                                     type="date"
                                     required
