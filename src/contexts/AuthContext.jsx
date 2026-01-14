@@ -11,9 +11,19 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        supabase.auth.getSession().then(async ({ data: { session } }) => {
             setSession(session)
-            setUser(session?.user ?? null)
+            if (session?.user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', session.user.id)
+                    .single()
+
+                setUser({ ...session.user, role: profile?.role || 'customer' })
+            } else {
+                setUser(null)
+            }
             setLoading(false)
         })
 

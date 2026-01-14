@@ -1,7 +1,12 @@
+-- Drop existing tables to verify clean state (CASCADE deletes dependents like comments/likes)
+drop table if exists likes cascade;
+drop table if exists comments cascade;
+drop table if exists posts cascade;
+
 -- Create a table for posts (social feed)
 create table posts (
   id uuid default uuid_generate_v4() primary key,
-  user_id uuid references auth.users not null,
+  user_id uuid references profiles(id) not null, -- Changed from auth.users to profiles for easier joins
   content text not null,
   image_url text,
   likes_count integer default 0,
@@ -31,8 +36,8 @@ create policy "Users can delete their own posts."
 create table comments (
   id uuid default uuid_generate_v4() primary key,
   post_id uuid references posts(id) on delete cascade not null,
-  user_id uuid references auth.users not null,
-  parent_id uuid references comments(id) on delete cascade, -- For replies
+  user_id uuid references profiles(id) not null, -- Changed to profiles
+  parent_id uuid references comments(id) on delete cascade,
   content text not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -51,13 +56,13 @@ create policy "Users can delete their own comments."
   on comments for delete
   using ( auth.uid() = user_id );
 
--- Create a table for likes (polymorphic-ish, but simple for now)
+-- Create a table for likes
 create table likes (
   id uuid default uuid_generate_v4() primary key,
-  user_id uuid references auth.users not null,
+  user_id uuid references profiles(id) not null, -- Changed to profiles
   post_id uuid references posts(id) on delete cascade,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  unique(user_id, post_id) -- Prevent duplicate likes
+  unique(user_id, post_id)
 );
 
 alter table likes enable row level security;
@@ -87,6 +92,7 @@ begin
 end;
 $$ language plpgsql;
 
+drop trigger if exists trigger_update_post_likes_count on likes;
 create trigger trigger_update_post_likes_count
 after insert or delete on likes
 for each row execute procedure update_post_likes_count();
@@ -103,6 +109,7 @@ begin
 end;
 $$ language plpgsql;
 
+drop trigger if exists trigger_update_post_comments_count on comments;
 create trigger trigger_update_post_comments_count
 after insert or delete on comments
 for each row execute procedure update_post_comments_count();

@@ -48,14 +48,29 @@ LensLocker is a premium platform connecting professional photographers with clie
 
 4.  **Database Setup:**
     Run the SQL scripts provided in the root directory in your Supabase SQL Editor in this order:
-    1.  `supabase_schema.sql` (Base tables, Profiles, RLS)
-    2.  `social_features.sql` (Posts, Comments, Likes)
-    3.  `fix_relationships.sql` (Fixes for foreign key joins)
+    1.  `database/supabase_schema.sql` (Base tables, Profiles, RLS)
+    2.  `database/social_features.sql` (Posts, Comments, Likes)
+    3.  `database/fix_relationships.sql` (Fixes for foreign key joins)
+    4.  `database/reviews.sql` (Reviews & Ratings)
+    5.  `database/chat.sql` (Real-time Messaging)
+    6.  `database/admin.sql` (Admin Roles & Permissions)
+    7.  `database/availability.sql` (Availability System)
 
 5.  **Run the application:**
     ```bash
     npm run dev
     ```
+
+### 🛡️ Super Admin Access
+
+To enable the Super Admin dashboard:
+1.  Sign up a new user (or use an existing one).
+2.  Run the following SQL in your Supabase SQL Editor to promote them:
+    ```sql
+    update profiles set role = 'admin' where id = 'USER_UUID_HERE';
+    ```
+    *(You can find the UUID in the Authentication tab).*
+3.  Refresh the page, and you will see the **Admin Panel** link in the profile dropdown (red text).
 
 ## 📂 Project Structure
 

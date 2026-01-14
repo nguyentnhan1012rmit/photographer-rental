@@ -63,10 +63,6 @@ export default function Feed() {
             <div className="w-full max-w-3xl mx-auto px-6">
                 <div className="flex items-center justify-between mb-12 border-b border-base-content/10 pb-6">
                     <h1 className="text-4xl font-bold tracking-tight">Community Feed</h1>
-                    <div className="flex gap-2">
-                        <button className="btn btn-ghost btn-sm">Enhance</button>
-                        <button className="btn btn-ghost btn-sm">Filter</button>
-                    </div>
                 </div>
 
                 <CreatePost onPostCreated={fetchPosts} />
@@ -78,7 +74,7 @@ export default function Feed() {
                 ) : (
                     <div className="space-y-0">
                         {posts.map(post => (
-                            <PostCard key={post.id} post={post} />
+                            <PostCard key={post.id} post={post} onDelete={fetchPosts} />
                         ))}
                         {posts.length === 0 && (
                             <div className="text-center py-20 opacity-50 border-t border-base-content/10">

@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
-import { MapPin, User } from 'lucide-react'
+import { MapPin, User, ArrowRight } from 'lucide-react'
 
 export default function Photographers() {
     const [photographers, setPhotographers] = useState([])
     const [loading, setLoading] = useState(true)
+    const navigate = useNavigate()
 
     useEffect(() => {
         async function fetchPhotographers() {
@@ -31,7 +33,7 @@ export default function Photographers() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
                     {photographers.map(p => (
-                        <div key={p.id} className="group cursor-pointer">
+                        <div key={p.id} className="group cursor-pointer" onClick={() => navigate(`/photographer/${p.id}`)}>
                             <figure className="h-64 w-full bg-base-300 relative overflow-hidden rounded-xl mb-4 group-hover:brightness-110 transition-all">
                                 {/* Placeholder for cover image if we had one */}
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>

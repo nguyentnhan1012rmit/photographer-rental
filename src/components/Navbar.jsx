@@ -35,6 +35,13 @@ export default function Navbar() {
                         </div>
                         <ul tabIndex={0} className="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">
                             <li><Link to="/dashboard">Dashboard</Link></li>
+                            <li><Link to="/my-bookings">My Bookings</Link></li>
+                            <li><Link to="/inbox">Inbox</Link></li>
+                            {user.role === 'admin' && (
+                                <li className="text-error font-bold"><Link to="/admin">Admin Panel</Link></li>
+                            )}
+                            <li><Link to="/settings">Settings</Link></li>
+                            <div className="divider my-1"></div>
                             <li><button onClick={handleSignOut}>Logout</button></li>
                         </ul>
                     </div>
