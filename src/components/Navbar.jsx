@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { Settings, LogOut, Moon, ChevronRight, HelpCircle } from 'lucide-react'
 
 export default function Navbar() {
     const { user, signOut } = useAuth()
@@ -33,20 +34,74 @@ export default function Navbar() {
                                 <span className="text-xs">{user.email?.charAt(0).toUpperCase()}</span>
                             </div>
                         </div>
-                        <ul tabIndex={0} className="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">
-                            <li><Link to="/dashboard">Dashboard</Link></li>
-                            <li><Link to="/my-bookings">My Bookings</Link></li>
-                            <li><Link to="/inbox">Inbox</Link></li>
-                            {user.role === 'admin' && (
-                                <li className="text-error font-bold"><Link to="/admin">Admin Panel</Link></li>
-                            )}
-                            <li><Link to="/settings">Settings</Link></li>
-                            <div className="divider my-1"></div>
-                            <li><button onClick={handleSignOut}>Logout</button></li>
-                        </ul>
+                        <div tabIndex={0} className="mt-3 z-[1] p-2 shadow-2xl menu menu-sm dropdown-content bg-[#242526] rounded-xl w-80 text-white border border-t-[1px] border-white/10">
+                            {/* Profile Header */}
+                            <div className="p-2 mb-2">
+                                <Link
+                                    to={`/photographer/${user.id}`}
+                                    className="flex items-center gap-3 p-2 hover:bg-white/10 rounded-lg transition-colors shadow-sm border border-white/5"
+                                >
+                                    <div className="avatar placeholder">
+                                        <div className="bg-neutral text-neutral-content rounded-full w-10">
+                                            <span className="text-sm">{user.email?.charAt(0).toUpperCase()}</span>
+                                        </div>
+                                    </div>
+                                    <div className="font-bold text-lg">{user.email?.split('@')[0]}</div> {/* Using email as name fallback if full_name not in context immediately, ideally context has profile */}
+                                </Link>
+                                <div className="divider my-1 opacity-20"></div>
+                            </div>
+
+                            {/* Menu Items */}
+                            <ul className="space-y-1 px-2 pb-2">
+                                <li>
+                                    <Link to="/settings" className="flex items-center justify-between py-3 hover:bg-white/10 rounded-lg active:bg-white/20">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+                                                <Settings size={20} />
+                                            </div>
+                                            <span className="font-medium text-base">Settings & privacy</span>
+                                        </div>
+                                        <ChevronRight size={20} className="opacity-50" />
+                                    </Link>
+                                </li>
+                                <li>
+                                    <a className="flex items-center justify-between py-3 hover:bg-white/10 rounded-lg active:bg-white/20">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+                                                <HelpCircle size={20} />
+                                            </div>
+                                            <span className="font-medium text-base">Help & support</span>
+                                        </div>
+                                        <ChevronRight size={20} className="opacity-50" />
+                                    </a>
+                                </li>
+                                <li>
+                                    <a className="flex items-center justify-between py-3 hover:bg-white/10 rounded-lg active:bg-white/20">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+                                                <Moon size={20} />
+                                            </div>
+                                            <span className="font-medium text-base">Display & accessibility</span>
+                                        </div>
+                                        <ChevronRight size={20} className="opacity-50" />
+                                    </a>
+                                </li>
+                                <li>
+                                    <button onClick={handleSignOut} className="flex items-center justify-between py-3 hover:bg-white/10 rounded-lg active:bg-white/20 w-full text-left">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+                                                <LogOut size={20} />
+                                            </div>
+                                            <span className="font-medium text-base">Log out</span>
+                                        </div>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 )}
             </div>
         </div>
     )
 }
+

@@ -3,6 +3,7 @@ import { Heart, MessageCircle, Send, CornerDownRight, MoreHorizontal, Trash2 } f
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../contexts/AuthContext'
 import { toast } from 'react-hot-toast'
+import { Link } from 'react-router-dom'
 
 export default function CommentItem({ comment, onReply, onDelete, onEdit, depth = 0 }) {
     const { user } = useAuth()
@@ -98,7 +99,7 @@ export default function CommentItem({ comment, onReply, onDelete, onEdit, depth 
     return (
         <div className={`mt-4 ${depth > 0 ? 'ml-8 border-l-2 border-base-200 pl-4' : ''}`}>
             <div className="flex gap-3 items-start group">
-                <div className="avatar placeholder pt-1">
+                <Link to={`/photographer/${comment.user_id}`} className="avatar placeholder pt-1 hover:opacity-80 transition-opacity">
                     <div className="w-8 h-8 rounded-full overflow-hidden">
                         {comment.profiles?.avatar_url ? (
                             <img src={comment.profiles.avatar_url} className="avatar-img" alt={comment.profiles.full_name} />
@@ -108,7 +109,7 @@ export default function CommentItem({ comment, onReply, onDelete, onEdit, depth 
                             </div>
                         )}
                     </div>
-                </div>
+                </Link>
 
                 <div className="flex-1">
                     {isEditing ? (
@@ -126,7 +127,9 @@ export default function CommentItem({ comment, onReply, onDelete, onEdit, depth 
                         </form>
                     ) : (
                         <div className="bg-base-200/50 rounded-2xl p-3 px-4 text-sm inline-block min-w-[200px]">
-                            <span className="font-bold block text-xs opacity-70 mb-1">{comment.profiles?.full_name}</span>
+                            <Link to={`/photographer/${comment.user_id}`} className="font-bold block text-xs opacity-70 mb-1 hover:underline">
+                                {comment.profiles?.full_name}
+                            </Link>
                             <p className="whitespace-pre-wrap">{comment.content}</p>
                         </div>
                     )}

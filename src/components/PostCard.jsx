@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../contexts/AuthContext'
 import CommentItem from './CommentItem'
+import { Link } from 'react-router-dom'
 
 export default function PostCard({ post, onDelete }) {
     const { user } = useAuth()
@@ -163,7 +164,7 @@ export default function PostCard({ post, onDelete }) {
         <div className="py-6 border-b border-base-200/50 first:pt-0 last:border-0 hover:bg-base-100/40 transition-colors -mx-4 px-4">
             {/* Header */}
             <div className="flex items-center gap-4 mb-4">
-                <div className="avatar placeholder">
+                <Link to={`/photographer/${post.user_id}`} className="avatar placeholder hover:opacity-80 transition-opacity">
                     <div className="w-12 h-12 rounded-full overflow-hidden">
                         {post.profiles?.avatar_url ? (
                             <img src={post.profiles.avatar_url} className="avatar-img" alt={post.profiles.full_name} />
@@ -173,9 +174,11 @@ export default function PostCard({ post, onDelete }) {
                             </div>
                         )}
                     </div>
-                </div>
+                </Link>
                 <div className="flex-1">
-                    <h3 className="font-bold text-base text-base-content">{post.profiles?.full_name || 'Unknown User'}</h3>
+                    <Link to={`/photographer/${post.user_id}`} className="font-bold text-base text-base-content hover:underline">
+                        {post.profiles?.full_name || 'Unknown User'}
+                    </Link>
                     <div className="text-sm text-base-content/50">
                         {new Date(post.created_at).toLocaleDateString()}
                     </div>
