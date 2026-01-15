@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../contexts/AuthContext'
-import { Save, User, MapPin, Camera, X, ZoomIn, Image, Check } from 'lucide-react'
+import { Save, User, MapPin, Camera, X, ZoomIn, Image, Check, Mail } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
 export default function ProfileSettings() {
@@ -214,19 +214,19 @@ export default function ProfileSettings() {
                     <form onSubmit={handleSubmit} className="space-y-6">
 
                         {/* Images Section */}
-                        <div className="space-y-6">
-                            {/* Cover Photo - Full Width */}
-                            <div className="relative group w-full h-48 rounded-2xl overflow-hidden bg-base-200 border border-base-300">
+                        <div className="relative mb-20 group">
+                            {/* Cover Photo */}
+                            <div className="relative w-full h-52 rounded-2xl overflow-hidden bg-base-200 border border-base-300 shadow-sm group-hover:shadow-md transition-all">
                                 {formData.cover_photo_url ? (
                                     <img src={formData.cover_photo_url} alt="Cover" className="w-full h-full object-cover" />
                                 ) : (
-                                    <div className="flex items-center justify-center w-full h-full opacity-30">
+                                    <div className="flex items-center justify-center w-full h-full opacity-30 bg-base-300">
                                         <Image size={48} />
                                     </div>
                                 )}
-                                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
                                     onClick={() => coverInputRef.current.click()}>
-                                    <div className="btn btn-sm btn-glass text-white gap-2">
+                                    <div className="btn btn-sm bg-base-100 text-base-content border-none hover:bg-base-200 gap-2 shadow-lg font-bold">
                                         <Camera size={16} /> Change Cover
                                     </div>
                                 </div>
@@ -239,23 +239,23 @@ export default function ProfileSettings() {
                                 />
                             </div>
 
-                            {/* Avatar - Negative Margin Overlay */}
-                            <div className="relative -mt-16 mx-auto w-32 h-32">
+                            {/* Avatar */}
+                            <div className="absolute -bottom-16 left-6">
                                 <div
-                                    className="relative w-full h-full rounded-full ring-4 ring-base-100 shadow-xl overflow-hidden group cursor-pointer bg-base-100"
+                                    className="relative w-36 h-36 rounded-full ring-4 ring-base-100 shadow-xl overflow-hidden group/avatar cursor-pointer bg-base-100"
                                     onClick={() => avatarInputRef.current.click()}
                                 >
                                     {formData.avatar_url ? (
-                                        <img src={formData.avatar_url} alt="Avatar" className="avatar-img" />
+                                        <img src={formData.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                                     ) : (
-                                        <div className="w-full h-full bg-neutral text-neutral-content flex items-center justify-center text-3xl font-bold">
+                                        <div className="w-full h-full bg-neutral text-neutral-content flex items-center justify-center text-4xl font-bold">
                                             {formData.full_name?.[0]}
                                         </div>
                                     )}
 
                                     {/* Hover Overlay */}
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                        <Camera className="text-white" size={24} />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center">
+                                        <Camera className="text-white" size={28} />
                                     </div>
                                 </div>
                                 <input
@@ -297,6 +297,20 @@ export default function ProfileSettings() {
                         </div>
 
                         <div className="form-control">
+                            <label className="label font-bold">Email</label>
+                            <label className="input input-bordered flex items-center gap-2 bg-base-200">
+                                <Mail size={16} className="opacity-70" />
+                                <input
+                                    type="text"
+                                    className="grow text-base-content/70"
+                                    value={user?.email || ''}
+                                    disabled
+                                    readOnly
+                                />
+                            </label>
+                        </div>
+
+                        <div className="form-control">
                             <label className="label font-bold">Location</label>
                             <label className="input input-bordered flex items-center gap-2">
                                 <MapPin size={16} className="opacity-70" />
@@ -310,26 +324,7 @@ export default function ProfileSettings() {
                             </label>
                         </div>
 
-                        <div className="form-control">
-                            <label className="label font-bold">Bio</label>
-                            <textarea
-                                className="textarea textarea-bordered h-24"
-                                placeholder="Tell us about yourself..."
-                                value={formData.bio}
-                                onChange={e => setFormData({ ...formData, bio: e.target.value })}
-                            ></textarea>
-                        </div>
 
-                        <div className="form-control">
-                            <label className="label font-bold">Website</label>
-                            <input
-                                type="url"
-                                className="input input-bordered w-full"
-                                placeholder="https://yourportfolio.com"
-                                value={formData.website}
-                                onChange={e => setFormData({ ...formData, website: e.target.value })}
-                            />
-                        </div>
 
                         {/* Optional: Role switching */}
                         <div className="form-control bg-base-200 p-4 rounded-xl">

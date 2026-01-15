@@ -30,23 +30,23 @@ export default function Login() {
             <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-primary/10 to-transparent -z-10 blur-3xl opacity-50"></div>
             <div className="absolute bottom-0 right-0 w-1/2 h-full bg-gradient-to-l from-secondary/10 to-transparent -z-10 blur-3xl opacity-50"></div>
 
-            <div className="w-full max-w-lg mx-auto flex flex-col justify-center px-8 md:px-16 py-12">
-                <div className="mb-12">
-                    <h1 className="text-5xl font-bold mb-4 tracking-tighter">Welcome Back</h1>
-                    <p className="text-xl text-base-content/60">Enter your details to access your account.</p>
+            <div className="w-full max-w-lg mx-auto flex flex-col justify-center px-8 md:px-16 py-8">
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold mb-2 tracking-tighter">Welcome Back</h1>
+                    <p className="text-base text-base-content/60">Enter your details to access your account.</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     {error && <div className="alert alert-error rounded-lg">{error}</div>}
 
                     <div className="form-control">
                         <label className="label pl-0">
-                            <span className="label-text font-medium text-lg">Email</span>
+                            <span className="label-text font-medium">Email</span>
                         </label>
                         <input
                             type="email"
                             placeholder="name@example.com"
-                            className="input input-lg input-bordered bg-base-100/50 backdrop-blur-sm w-full focus:outline-none focus:border-primary transition-all"
+                            className="input input-bordered bg-base-100/50 backdrop-blur-sm w-full focus:outline-none focus:border-primary transition-all"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -55,12 +55,12 @@ export default function Login() {
 
                     <div className="form-control">
                         <label className="label pl-0">
-                            <span className="label-text font-medium text-lg">Password</span>
+                            <span className="label-text font-medium">Password</span>
                         </label>
                         <input
                             type="password"
                             placeholder="••••••••"
-                            className="input input-lg input-bordered bg-base-100/50 backdrop-blur-sm w-full focus:outline-none focus:border-primary transition-all"
+                            className="input input-bordered bg-base-100/50 backdrop-blur-sm w-full focus:outline-none focus:border-primary transition-all"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
@@ -72,16 +72,16 @@ export default function Login() {
 
                     <button
                         type="submit"
-                        className="btn btn-primary btn-lg w-full mt-8 shadow-lg shadow-primary/30 hover:scale-[1.02] transition-transform"
+                        className="btn btn-primary w-full mt-6 shadow-lg shadow-primary/30 hover:scale-[1.02] transition-transform"
                         disabled={loading}
                     >
                         {loading ? <span className="loading loading-spinner"></span> : (
-                            <span className="flex items-center gap-2">Sign In <ArrowRight size={20} /></span>
+                            <span className="flex items-center gap-2">Sign In <ArrowRight size={18} /></span>
                         )}
                     </button>
                 </form>
 
-                <p className="text-center mt-8 text-base-content/60">
+                <p className="text-center mt-6 text-base-content/60 text-sm">
                     Don't have an account? <Link to="/signup" className="text-primary font-semibold hover:underline">Sign up</Link>
                 </p>
             </div>

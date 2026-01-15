@@ -6,6 +6,7 @@ import { ArrowRight } from 'lucide-react'
 export default function SignUp() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
     const [fullName, setFullName] = useState('')
     const [username, setUsername] = useState('')
     const [role, setRole] = useState('customer')
@@ -16,6 +17,9 @@ export default function SignUp() {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
+        if (password !== confirmPassword) {
+            return setError("Passwords do not match")
+        }
         setLoading(true)
         setError(null)
         const { error } = await signUp({
@@ -44,40 +48,23 @@ export default function SignUp() {
             <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary/10 to-transparent -z-10 blur-3xl opacity-50"></div>
             <div className="absolute bottom-0 left-0 w-1/2 h-full bg-gradient-to-r from-secondary/10 to-transparent -z-10 blur-3xl opacity-50"></div>
 
-            <div className="w-full max-w-lg mx-auto flex flex-col justify-center px-8 md:px-16 py-12">
-                <div className="mb-12">
-                    <h1 className="text-5xl font-bold mb-4 tracking-tighter">Create Account</h1>
-                    <p className="text-xl text-base-content/60">Join the community to start capturing moments.</p>
+            <div className="w-full max-w-lg mx-auto flex flex-col justify-center px-8 md:px-16 py-8">
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold mb-2 tracking-tighter">Create Account</h1>
+                    <p className="text-base text-base-content/60">Join the community to start capturing moments.</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     {error && <div className="alert alert-error rounded-lg">{error}</div>}
-
-                    {/* Role Selection */}
-                    {/* Role Selection */}
-                    <div className="form-control bg-base-200 p-4 rounded-xl mb-6">
-                        <label className="label cursor-pointer justify-start gap-4">
-                            <span className="label-text font-bold text-lg">I am a Creator</span>
-                            <input
-                                type="checkbox"
-                                className="toggle toggle-primary toggle-lg"
-                                checked={role === 'photographer'}
-                                onChange={(e) => setRole(e.target.checked ? 'photographer' : 'customer')}
-                            />
-                        </label>
-                        <p className="text-sm opacity-70 mt-1 ml-1">
-                            Switch this on if you want to offer your services as a photographer.
-                        </p>
-                    </div>
 
                     <div className="form-control">
                         <label className="label pl-0">
-                            <span className="label-text font-medium text-lg">Full Name</span>
+                            <span className="label-text font-medium">Full Name</span>
                         </label>
                         <input
                             type="text"
                             placeholder="e.g. Jane Doe"
-                            className="input input-lg input-bordered bg-base-100/50 backdrop-blur-sm w-full focus:outline-none focus:border-primary transition-all"
+                            className="input input-bordered bg-base-100/50 backdrop-blur-sm w-full focus:outline-none focus:border-primary transition-all"
                             value={fullName}
                             onChange={(e) => setFullName(e.target.value)}
                             required
@@ -86,28 +73,31 @@ export default function SignUp() {
 
                     <div className="form-control">
                         <label className="label pl-0">
-                            <span className="label-text font-medium text-lg">Username</span>
+                            <span className="label-text font-medium">Username</span>
                         </label>
-                        <input
-                            type="text"
-                            placeholder="e.g. janedoe"
-                            className="input input-lg input-bordered bg-base-100/50 backdrop-blur-sm w-full focus:outline-none focus:border-primary transition-all"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ''))} // Auto-format username
-                            required
-                            pattern="^[a-z0-9_]+$"
-                            title="Username can only contain lowercase letters, numbers, and underscores."
-                        />
+                        <label className="input input-bordered bg-base-100/50 backdrop-blur-sm w-full focus-within:border-primary transition-all flex items-center gap-2">
+                            <span className="opacity-70 font-mono">@</span>
+                            <input
+                                type="text"
+                                placeholder="janedoe"
+                                className="grow bg-transparent focus:outline-none"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ''))} // Auto-format username
+                                required
+                                pattern="^[a-z0-9_]+$"
+                                title="Username can only contain lowercase letters, numbers, and underscores."
+                            />
+                        </label>
                     </div>
 
                     <div className="form-control">
                         <label className="label pl-0">
-                            <span className="label-text font-medium text-lg">Email</span>
+                            <span className="label-text font-medium">Email</span>
                         </label>
                         <input
                             type="email"
                             placeholder="name@example.com"
-                            className="input input-lg input-bordered bg-base-100/50 backdrop-blur-sm w-full focus:outline-none focus:border-primary transition-all"
+                            className="input input-bordered bg-base-100/50 backdrop-blur-sm w-full focus:outline-none focus:border-primary transition-all"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -116,30 +106,60 @@ export default function SignUp() {
 
                     <div className="form-control">
                         <label className="label pl-0">
-                            <span className="label-text font-medium text-lg">Password</span>
+                            <span className="label-text font-medium">Password</span>
                         </label>
                         <input
                             type="password"
                             placeholder="••••••••"
-                            className="input input-lg input-bordered bg-base-100/50 backdrop-blur-sm w-full focus:outline-none focus:border-primary transition-all"
+                            className="input input-bordered bg-base-100/50 backdrop-blur-sm w-full focus:outline-none focus:border-primary transition-all"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
                     </div>
 
+                    <div className="form-control">
+                        <label className="label pl-0">
+                            <span className="label-text font-medium">Re-enter Password</span>
+                        </label>
+                        <input
+                            type="password"
+                            placeholder="••••••••"
+                            className="input input-bordered bg-base-100/50 backdrop-blur-sm w-full focus:outline-none focus:border-primary transition-all"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+
+                    {/* Role Selection */}
+                    <div className="form-control bg-base-200 p-3 rounded-lg mb-4">
+                        <label className="label cursor-pointer justify-start gap-4">
+                            <span className="label-text font-bold">I am a Photographer</span>
+                            <input
+                                type="checkbox"
+                                className="toggle toggle-sm toggle-primary"
+                                checked={role === 'photographer'}
+                                onChange={(e) => setRole(e.target.checked ? 'photographer' : 'customer')}
+                            />
+                        </label>
+                        <p className="text-xs opacity-70 mt-1">
+                            Switch this on to enable photographer features like Dashboard.
+                        </p>
+                    </div>
+
                     <button
                         type="submit"
-                        className="btn btn-primary btn-lg w-full mt-8 shadow-lg shadow-primary/30 hover:scale-[1.02] transition-transform"
+                        className="btn btn-primary w-full mt-6 shadow-lg shadow-primary/30 hover:scale-[1.02] transition-transform"
                         disabled={loading}
                     >
                         {loading ? <span className="loading loading-spinner"></span> : (
-                            <span className="flex items-center gap-2">Create Account <ArrowRight size={20} /></span>
+                            <span className="flex items-center gap-2">Create Account <ArrowRight size={18} /></span>
                         )}
                     </button>
                 </form>
 
-                <p className="text-center mt-8 text-base-content/60">
+                <p className="text-center mt-6 text-base-content/60 text-sm">
                     Already have an account? <Link to="/login" className="text-primary font-semibold hover:underline">Log in</Link>
                 </p>
             </div>

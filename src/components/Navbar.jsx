@@ -60,7 +60,7 @@ export default function Navbar() {
                 {!user ? (
                     <>
                         <Link to="/login" className="btn btn-sm btn-ghost">Log In</Link>
-                        <Link to="/signup" className="btn btn-sm btn-primary">Register</Link>
+                        <Link to="/signup" className="btn btn-sm btn-primary">Sign Up</Link>
                     </>
                 ) : (
                     <div className="flex items-center gap-2">
@@ -116,9 +116,8 @@ export default function Navbar() {
                                                 <div className="w-9 h-9 rounded-full bg-base-content/5 flex items-center justify-center">
                                                     <Settings size={20} />
                                                 </div>
-                                                <span className="font-medium text-base">Settings & privacy</span>
+                                                <span className="font-medium text-base">Settings</span>
                                             </div>
-                                            <ChevronRight size={20} className="opacity-50" />
                                         </Link>
                                     </li>
                                     <li>
