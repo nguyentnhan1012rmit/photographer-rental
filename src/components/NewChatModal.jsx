@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { Search, X, User } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { toast } from 'react-hot-toast'
+
 
 export default function NewChatModal({ isOpen, onClose, onSelectUser }) {
     const { user } = useAuth()
@@ -12,24 +12,7 @@ export default function NewChatModal({ isOpen, onClose, onSelectUser }) {
     const [loading, setLoading] = useState(false)
     const [searchLoading, setSearchLoading] = useState(false)
 
-    useEffect(() => {
-        if (isOpen && user) {
-            fetchFollowing()
-        }
-    }, [isOpen, user])
-
-    useEffect(() => {
-        if (searchQuery.trim().length > 2) {
-            const delayDebounceFn = setTimeout(() => {
-                searchUsers()
-            }, 500)
-            return () => clearTimeout(delayDebounceFn)
-        } else {
-            setSearchResults([])
-        }
-    }, [searchQuery])
-
-    const fetchFollowing = async () => {
+    const fetchFollowing = useCallback(async () => {
         setLoading(true)
         // Get IDs of people the user follows
         const { data: followsData } = await supabase
@@ -48,9 +31,16 @@ export default function NewChatModal({ isOpen, onClose, onSelectUser }) {
             setFollowing([])
         }
         setLoading(false)
-    }
+    }, [user])
 
-    const searchUsers = async () => {
+    useEffect(() => {
+        if (isOpen && user) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            fetchFollowing()
+        }
+    }, [isOpen, user, fetchFollowing])
+
+    const searchUsers = useCallback(async () => {
         setSearchLoading(true)
         const { data } = await supabase
             .from('profiles')
@@ -61,7 +51,19 @@ export default function NewChatModal({ isOpen, onClose, onSelectUser }) {
 
         setSearchResults(data || [])
         setSearchLoading(false)
-    }
+    }, [searchQuery, user])
+
+    useEffect(() => {
+        if (searchQuery.trim().length > 2) {
+            const delayDebounceFn = setTimeout(() => {
+                searchUsers()
+            }, 500)
+            return () => clearTimeout(delayDebounceFn)
+        } else {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setSearchResults([])
+        }
+    }, [searchQuery, searchUsers])
 
     const handleSelect = (selectedUser) => {
         onSelectUser(selectedUser)

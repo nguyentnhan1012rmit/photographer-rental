@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../contexts/AuthContext'
 import ChatWindow from '../components/ChatWindow'
@@ -16,40 +16,42 @@ export default function Inbox() {
     const [isNewChatOpen, setIsNewChatOpen] = useState(false)
     const [contextMenu, setContextMenu] = useState(null) // { x, y, conversationId }
 
-    useEffect(() => {
-        if (user) {
-            fetchConversations().then((data) => {
-                // Check if we need to start a specific chat
-                if (location.state?.startChatWith) {
-                    const target = location.state.startChatWith
-                    if (target.id === user.id) return // Can't chat with self
+    const handleNewMessage = useCallback(async (newMessage, partnerId) => {
+        setConversations(prev => {
+            const existingIndex = prev.findIndex(c => c.id === partnerId)
+            if (existingIndex >= 0) {
+                const updated = { ...prev[existingIndex], lastMessage: newMessage.content, lastMessageDate: newMessage.created_at }
+                const newList = [...prev]
+                newList.splice(existingIndex, 1)
+                return [updated, ...newList]
+            } else {
+                return prev // Wait for fetch
+            }
+        })
 
-                    const existing = data.find(c => c.id === target.id)
-                    if (existing) {
-                        setSelectedUser(existing)
-                    } else {
-                        // Add temporary conversation item
-                        const newConvo = {
-                            id: target.id,
-                            full_name: target.full_name,
-                            avatar_url: target.avatar_url,
-                            lastMessage: 'New conversation',
-                            lastMessageDate: new Date().toISOString()
-                        }
-                        setConversations(prev => [newConvo, ...prev])
-                        setSelectedUser(newConvo)
+        // Check if we need to fetch profile (only if not found above)
+        if (newMessage.sender_id === partnerId) {
+            const { data: senderProfile } = await supabase
+                .from('profiles')
+                .select('id, full_name, avatar_url')
+                .eq('id', partnerId)
+                .single()
+
+            if (senderProfile) {
+                setConversations(prev => {
+                    if (prev.find(c => c.id === partnerId)) return prev
+                    const newConvo = {
+                        ...senderProfile,
+                        lastMessage: newMessage.content,
+                        lastMessageDate: newMessage.created_at
                     }
-                }
-            })
-
-            const subscription = subscribeToNewMessages()
-            return () => {
-                subscription.unsubscribe()
+                    return [newConvo, ...prev]
+                })
             }
         }
-    }, [user, location.state])
+    }, [])
 
-    const subscribeToNewMessages = () => {
+    const subscribeToNewMessages = useCallback(() => {
         return supabase
             .channel('public:inbox')
             .on('postgres_changes', {
@@ -70,51 +72,11 @@ export default function Inbox() {
                 handleNewMessage(payload.new, payload.new.receiver_id)
             })
             .subscribe()
-    }
+    }, [user, handleNewMessage])
 
-    const handleNewMessage = async (newMessage, partnerId) => {
-        setConversations(prev => {
-            const existingIndex = prev.findIndex(c => c.id === partnerId)
-            if (existingIndex >= 0) {
-                const updated = { ...prev[existingIndex], lastMessage: newMessage.content, lastMessageDate: newMessage.created_at }
-                const newList = [...prev]
-                newList.splice(existingIndex, 1)
-                return [updated, ...newList]
-            } else {
-                return prev // Wait for fetch
-            }
-        })
 
-        // Check if we need to fetch profile (only if not found above)
-        // We can't robustly check "if not found" inside the async callback easily without race conditions on 'prev', 
-        // effectively we just fetch if we suspect it might be new, or we can just rely on the fact that if we sent it, we probably know them.
-        // For incoming:
-        if (newMessage.sender_id === partnerId) {
-            const { data: senderProfile } = await supabase
-                .from('profiles')
-                .select('id, full_name, avatar_url')
-                .eq('id', partnerId)
-                .single()
 
-            if (senderProfile) {
-                setConversations(prev => {
-                    if (prev.find(c => c.id === partnerId)) return prev
-                    const newConvo = {
-                        ...senderProfile,
-                        lastMessage: newMessage.content,
-                        lastMessageDate: newMessage.created_at
-                    }
-                    return [newConvo, ...prev]
-                })
-            }
-        }
-    }
-
-    const fetchConversations = async () => {
-        // This is a bit complex in SQL. We need to find unique users we've chatted with.
-        // A simple way is to fetch distinct sender_ids where receiver is me, 
-        // AND distinct receiver_ids where sender is me.
-
+    const fetchConversations = useCallback(async () => {
         setLoading(true)
 
         // 1. Get messages where I am involved
@@ -160,6 +122,52 @@ export default function Inbox() {
             }
         }).sort((a, b) => new Date(b.lastMessageDate) - new Date(a.lastMessageDate))
 
+        if (conversationList) {
+            setConversations(conversationList)
+            // Return for promise chain
+            return conversationList
+        }
+        setLoading(false)
+        return []
+    }, [user])
+
+    useEffect(() => {
+        if (user) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            fetchConversations().then((data) => {
+                // Check if we need to start a specific chat
+                if (location.state?.startChatWith) {
+                    const target = location.state.startChatWith
+                    if (target.id === user.id) return // Can't chat with self
+
+                    const existing = data.find(c => c.id === target.id)
+                    if (existing) {
+                        setSelectedUser(existing)
+                    } else {
+                        // Add temporary conversation item
+                        const newConvo = {
+                            id: target.id,
+                            full_name: target.full_name,
+                            avatar_url: target.avatar_url,
+                            lastMessage: 'New conversation',
+                            lastMessageDate: new Date().toISOString()
+                        }
+                        setConversations(prev => [newConvo, ...prev])
+                        setSelectedUser(newConvo)
+                    }
+                }
+            })
+
+            const subscription = subscribeToNewMessages()
+            return () => {
+                subscription.unsubscribe()
+            }
+        }
+    }, [user, location.state, fetchConversations, subscribeToNewMessages])
+
+    // Use loading state
+    if (loading && conversations.length === 0) {
+        // Optional: could return a spinner here
     }
 
     const handleDeleteConversation = async () => {

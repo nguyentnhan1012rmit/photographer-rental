@@ -11,7 +11,7 @@ export default function Photographers() {
     useEffect(() => {
         async function fetchPhotographers() {
             setLoading(true)
-            const { data, error } = await supabase
+            const { data } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('role', 'photographer')

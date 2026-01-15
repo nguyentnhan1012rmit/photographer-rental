@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../contexts/AuthContext'
 import { Send } from 'lucide-react'
@@ -12,36 +12,22 @@ export default function ChatWindow({ recipientId, recipientName, recipientAvatar
     const [contextMenu, setContextMenu] = useState(null) // { x, y, messageId }
     const messagesEndRef = useRef(null)
 
-    useEffect(() => {
-        if (user && recipientId) {
-            fetchMessages()
-            const subscription = subscribeToMessages()
-            return () => {
-                subscription.unsubscribe()
-            }
-        }
-    }, [user, recipientId])
-
-    useEffect(() => {
-        scrollToBottom()
-    }, [messages])
-
-    const scrollToBottom = () => {
+    const scrollToBottom = useCallback(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-    }
+    }, [])
 
-    const fetchMessages = async () => {
+    const fetchMessages = useCallback(async () => {
         const { data, error } = await supabase
             .from('messages')
             .select('*')
-            .or(`and(sender_id.eq.${user.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user.id})`)
+            .or(`and(sender_id.eq.${user.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user.id})`)
             .order('created_at', { ascending: true })
 
         if (error) console.error('Error fetching messages:', error)
         else setMessages(data || [])
-    }
+    }, [user, recipientId])
 
-    const subscribeToMessages = () => {
+    const subscribeToMessages = useCallback(() => {
         return supabase
             .channel('public:messages')
             .on('postgres_changes', {
@@ -72,7 +58,22 @@ export default function ChatWindow({ recipientId, recipientName, recipientAvatar
                 }
             })
             .subscribe()
-    }
+    }, [user, recipientId])
+
+    useEffect(() => {
+        if (user && recipientId) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            fetchMessages()
+            const subscription = subscribeToMessages()
+            return () => {
+                subscription.unsubscribe()
+            }
+        }
+    }, [user, recipientId, fetchMessages, subscribeToMessages])
+
+    useEffect(() => {
+        scrollToBottom()
+    }, [messages, scrollToBottom])
 
     const handleSendMessage = async (e) => {
         e.preventDefault()

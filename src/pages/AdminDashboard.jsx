@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../contexts/AuthContext'
 import { Trash2, Shield, ShieldOff, Search } from 'lucide-react'
@@ -12,27 +12,26 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
 
+    const fetchUsers = useCallback(async () => {
+        setLoading(true)
+        const { data } = await supabase
+            .from('profiles')
+            .select('*')
+            .order('full_name') // sort by full_name
+
+        if (data) setUsers(data)
+        setLoading(false)
+    }, [])
+
     useEffect(() => {
         if (!user || user.role !== 'admin') {
             toast.error("Unauthorized Access")
             navigate('/')
             return
         }
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchUsers()
-    }, [user])
-
-    const fetchUsers = async () => {
-        setLoading(true)
-        const { data } = await supabase
-            .from('profiles')
-            .select('*')
-            .order('created_at', { ascending: false, nullsFirst: false }) // 'created_at' might not be on profile based on schema, assuming it is or sort by id. 
-            // Checking schema: profiles has 'updated_at', but not 'created_at'. Let's sort by full_name.
-            .order('full_name')
-
-        if (data) setUsers(data)
-        setLoading(false)
-    }
+    }, [user, navigate, fetchUsers])
 
     const handleDeleteUser = async (id) => {
         // Caution: Deleting from Auth is hard via client. We can only delete from public.profiles
@@ -125,7 +124,7 @@ export default function AdminDashboard() {
                                 </td>
                                 <td>
                                     <div className={`badge ${u.role === 'admin' ? 'badge-error' :
-                                            u.role === 'photographer' ? 'badge-secondary' : 'badge-ghost'
+                                        u.role === 'photographer' ? 'badge-secondary' : 'badge-ghost'
                                         }`}>
                                         {u.role}
                                     </div>

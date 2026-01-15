@@ -78,7 +78,7 @@ export default function Navbar() {
                                     />
                                 </div>
                             </div>
-                            <div tabIndex={0} className="mt-3 z-[1] p-2 shadow-2xl menu menu-sm dropdown-content bg-base-200 rounded-xl w-80 text-base-content border border-base-content/10">
+                            <div tabIndex={0} className="mt-3 z-[1] p-2 shadow-2xl menu menu-sm dropdown-content card-glass w-80 text-base-content border border-base-content/10">
                                 {/* Profile Header */}
                                 <div className="p-2 mb-2">
                                     <Link

@@ -1,3 +1,6 @@
+import daisyui from 'daisyui';
+import daisyuiThemes from 'daisyui/src/theming/themes';
+
 /** @type {import('tailwindcss').Config} */
 export default {
     darkMode: ['class', '[data-theme="dark"]'],
@@ -29,13 +32,13 @@ export default {
         },
     },
     plugins: [
-        require('daisyui'),
+        daisyui,
     ],
     daisyui: {
         themes: [
             {
                 light: {
-                    ...require("daisyui/src/theming/themes")["light"],
+                    ...daisyuiThemes["light"],
                     "primary": "#4f46e5", // Indigo 600
                     "primary-content": "#ffffff",
                     "secondary": "#7c3aed", // Violet 600
@@ -60,7 +63,7 @@ export default {
                     "--tab-radius": "0.5rem",
                 },
                 dark: {
-                    ...require("daisyui/src/theming/themes")["dark"],
+                    ...daisyuiThemes["dark"],
                     "primary": "#4f46e5", // Indigo 600 - slightly deeper/richer
                     "primary-content": "#ffffff",
                     "secondary": "#7c3aed", // Violet 600

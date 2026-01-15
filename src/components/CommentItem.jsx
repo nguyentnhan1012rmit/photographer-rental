@@ -12,7 +12,7 @@ export default function CommentItem({ comment, onReply, onDelete, onEdit, depth 
     const [showReplyInput, setShowReplyInput] = useState(false)
     const [replyContent, setReplyContent] = useState('')
     const [submitting, setSubmitting] = useState(false)
-    const [replies, setReplies] = useState(comment.children || [])
+
     const [isEditing, setIsEditing] = useState(false)
     const [editContent, setEditContent] = useState(comment.content)
 

@@ -7,7 +7,7 @@ import "react-datepicker/dist/react-datepicker.css"
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 
-export default function BookingModal({ service, photographer, isOpen, onClose, onSuccess }) {
+export default function BookingModal({ service, photographer, isOpen, onClose }) {
     const { user } = useAuth()
     const navigate = useNavigate()
     const [bookingDate, setBookingDate] = useState('')

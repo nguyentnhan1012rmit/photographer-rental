@@ -148,7 +148,7 @@ export default function SignUp() {
             <div className="hidden lg:flex w-1/2 bg-base-200 items-center justify-center relative overflow-hidden">
                 <div className="absolute inset-0 bg-neutral opacity-10 pattern-grid-lg"></div>
                 {/* You could add a large image here later */}
-                <h2 className="text-9xl font-bold opacity-5 -rotate-12 select-none">LensLocker</h2>
+                <h2 className="text-9xl font-bold opacity-5 -rotate-12 select-none">PiN</h2>
             </div>
         </div>
     )

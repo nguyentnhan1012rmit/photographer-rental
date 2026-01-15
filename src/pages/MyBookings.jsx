@@ -11,15 +11,7 @@ export default function MyBookings() {
     useEffect(() => {
         async function fetchBookings() {
             setLoading(true)
-            const { data, error } = await supabase
-                .from('bookings')
-                .select(`
-                    *,
-                    photographer:photographers(full_name, avatar_url, location),
-                    service:services(title, price)
-                `)
-                .eq('customer_id', user.id)
-                .order('booking_date', { ascending: false })
+
 
             // Note: In the query above, we assume foreign key relationships are named 'photographer_id' -> 'profiles' (aliased as photographer?)
             // If the relationship name is automatic, it might be just 'profiles'.

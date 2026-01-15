@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import PostCard from '../components/PostCard'
 import CreatePost from '../components/CreatePost'
@@ -7,7 +7,7 @@ export default function Feed() {
     const [posts, setPosts] = useState([])
     const [loading, setLoading] = useState(true)
 
-    const fetchPosts = async () => {
+    const fetchPosts = useCallback(async () => {
         setLoading(true)
         // 1. Fetch posts without the failed join
         const { data: postsData, error: postsError } = await supabase
@@ -52,11 +52,12 @@ export default function Feed() {
             setPosts([])
         }
         setLoading(false)
-    }
+    }, [])
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchPosts()
-    }, [])
+    }, [fetchPosts])
 
     return (
         <div className="min-h-screen bg-base-100 py-12">

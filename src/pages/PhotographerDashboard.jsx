@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../contexts/AuthContext'
 import { Plus, Trash2, Edit2, CheckCircle, XCircle, LayoutGrid, Calendar, Briefcase, Star, Image as ImageIcon } from 'lucide-react'
@@ -21,11 +21,7 @@ export default function PhotographerDashboard() {
     const [isAddPortfolioOpen, setIsAddPortfolioOpen] = useState(false)
     const [newPortfolio, setNewPortfolio] = useState({ image_url: '', caption: '' })
 
-    useEffect(() => {
-        if (user) fetchAllData()
-    }, [user])
-
-    const fetchAllData = async () => {
+    const fetchAllData = useCallback(async () => {
         setLoading(true)
         // Fetch Bookings (as photographer)
         const { data: bookingsData } = await supabase
@@ -56,7 +52,12 @@ export default function PhotographerDashboard() {
         if (portfolioData) setPortfolio(portfolioData)
 
         setLoading(false)
-    }
+    }, [user])
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (user) fetchAllData()
+    }, [user, fetchAllData])
 
     const handleUpdateBooking = async (id, status) => {
         await supabase.from('bookings').update({ status }).eq('id', id)

@@ -8,14 +8,14 @@ export default function PaymentPage() {
     const navigate = useNavigate()
     const location = useLocation()
     const [loading, setLoading] = useState(false)
-    const [bookingDetails, setBookingDetails] = useState(location.state?.booking || null)
+    const [bookingDetails] = useState(location.state?.booking || null)
 
     useEffect(() => {
         if (!bookingDetails) {
             toast.error("No booking found")
             navigate('/photographers')
         }
-    }, [bookingDetails])
+    }, [bookingDetails, navigate])
 
     const handlePayment = async (e) => {
         e.preventDefault()

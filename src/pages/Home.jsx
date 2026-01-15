@@ -11,7 +11,7 @@ export default function Home() {
                 <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary/10 to-transparent -z-10 blur-[100px] opacity-40"></div>
 
                 <div className="max-w-[1920px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                    <div className="text-left space-y-8">
+                    <div className="text-left space-y-8 animate-appear">
 
                         <h1 className="text-6xl md:text-8xl font-bold tracking-tight text-white leading-[1.1]">
                             Capture Life's <br />
@@ -166,7 +166,7 @@ export default function Home() {
             {/* Footer */}
             <footer className="footer items-center p-12 bg-base-100 text-base-content border-t border-white/5 mt-auto">
                 <aside className="items-center grid-flow-col">
-                    <div className="text-2xl font-bold tracking-tight text-white pr-6 border-r border-white/10">LensLocker</div>
+                    <div className="text-2xl font-bold tracking-tight text-white pr-6 border-r border-white/10">PiN</div>
                     <p className="pl-6 opacity-60">Copyright © 2026 - All right reserved</p>
                 </aside>
                 <nav className="grid-flow-col gap-8 md:place-self-center md:justify-self-end text-base opacity-60">

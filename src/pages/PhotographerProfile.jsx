@@ -15,7 +15,7 @@ export default function PhotographerProfile() {
     const [services, setServices] = useState([])
     const [portfolio, setPortfolio] = useState([])
     const [averageRating, setAverageRating] = useState(0)
-    const [reviewCount, setReviewCount] = useState(0)
+
     const [loading, setLoading] = useState(true)
 
     const isOwner = user && user.id === id
@@ -86,7 +86,7 @@ export default function PhotographerProfile() {
                 if (reviewsData && reviewsData.length > 0) {
                     const avg = reviewsData.reduce((acc, curr) => acc + curr.rating, 0) / reviewsData.length
                     setAverageRating(avg.toFixed(1))
-                    setReviewCount(reviewsData.length)
+
                 }
             }
 

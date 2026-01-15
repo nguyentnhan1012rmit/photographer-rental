@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { Star, MessageSquare } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
@@ -8,6 +8,7 @@ export default function ReviewSection({ photographerId }) {
     const { user } = useAuth()
     const [reviews, setReviews] = useState([])
     const [averageRating, setAverageRating] = useState(0)
+    // eslint-disable-next-line no-unused-vars
     const [loading, setLoading] = useState(true)
 
     // Form state
@@ -15,12 +16,7 @@ export default function ReviewSection({ photographerId }) {
     const [userCanReview, setUserCanReview] = useState(false)
     const [bookingIdToReview, setBookingIdToReview] = useState(null)
 
-    useEffect(() => {
-        fetchReviews()
-        if (user) checkEligibility()
-    }, [photographerId, user])
-
-    const fetchReviews = async () => {
+    const fetchReviews = useCallback(async () => {
         const { data } = await supabase
             .from('reviews')
             .select(`
@@ -36,9 +32,9 @@ export default function ReviewSection({ photographerId }) {
             setAverageRating(data.length ? avg.toFixed(1) : 0)
         }
         setLoading(false)
-    }
+    }, [photographerId])
 
-    const checkEligibility = async () => {
+    const checkEligibility = useCallback(async () => {
         // Check if user has a completed booking with this photographer that isn't reviewed yet
         const { data: bookings } = await supabase
             .from('bookings')
@@ -62,7 +58,13 @@ export default function ReviewSection({ photographerId }) {
             setUserCanReview(true)
             setBookingIdToReview(eligibleBooking.id)
         }
-    }
+    }, [user, photographerId])
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        fetchReviews()
+        if (user) checkEligibility()
+    }, [photographerId, user, fetchReviews, checkEligibility])
 
     const handleSubmit = async (e) => {
         e.preventDefault()

@@ -6,6 +6,32 @@
 @layer base {
     body {
         @apply antialiased text-base-content bg-base-100;
+        font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply font-bold tracking-tight text-base-content;
+    }
+
+    h1 {
+        @apply text-4xl md:text-5xl;
+    }
+
+    h2 {
+        @apply text-3xl md:text-4xl;
+    }
+
+    h3 {
+        @apply text-2xl md:text-3xl;
+    }
+
+    h4 {
+        @apply text-xl md:text-2xl;
     }
 
     /* Custom Scrollbar */
@@ -43,5 +69,19 @@
 
     .avatar-placeholder-bg {
         @apply bg-primary/20 text-primary flex items-center justify-center font-bold w-full h-full;
+    }
+
+    /* Premium Animation Utilities */
+    .animate-appear {
+        @apply animate-fade-in animate-slide-up;
+    }
+
+    .hover-scale {
+        @apply transition-transform duration-200 hover:scale-105;
+    }
+
+    /* Glass Card Standard */
+    .card-glass {
+        @apply glass-panel rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-white/10;
     }
 }
