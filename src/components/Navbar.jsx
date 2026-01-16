@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabaseClient'
-import { Settings, LogOut, Moon, ChevronRight, HelpCircle, MessageCircle, Compass } from 'lucide-react'
+import { Settings, LogOut, Moon, Sun, ChevronRight, HelpCircle, MessageCircle, Compass } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 export default function Navbar() {
@@ -59,6 +59,9 @@ export default function Navbar() {
             <div className="flex-none gap-2">
                 {!user ? (
                     <>
+                        <button onClick={toggleTheme} className="btn btn-ghost btn-circle mr-2">
+                            {theme === 'light' ? <Sun size={24} /> : <Moon size={24} />}
+                        </button>
                         <Link to="/login" className="btn btn-sm btn-ghost">Log In</Link>
                         <Link to="/signup" className="btn btn-sm btn-primary">Sign Up</Link>
                     </>
